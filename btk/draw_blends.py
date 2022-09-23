@@ -23,28 +23,6 @@ class SourceNotVisible(Exception):
     """Custom exception to indicate that a source has no visible model components."""
 
 
-def get_center_in_pixels(blend_catalog, wcs):
-    """Returns center of objects in blend_catalog in pixel coordinates of postage stamp.
-
-    `blend_catalog` contains `ra, dec` of object center with the postage stamp
-    center being 0,0. The size of the postage stamp and pixel scale is used to
-    compute the object centers in pixel coordinates. Coordinates are in pixels
-    where bottom left corner of postage stamp is (0, 0).
-
-    Args:
-        blend_catalog: Catalog with entries corresponding to one blend.
-        wcs (astropy.wcs.WCS): astropy WCS object corresponding to the image
-    Returns:
-        `astropy.table.Column`: x and y coordinates of object centroid
-    """
-    x_peak, y_peak = wcs.world_to_pixel_values(
-        blend_catalog["ra"] / 3600, blend_catalog["dec"] / 3600
-    )
-    dx_col = Column(x_peak, name="x_peak")
-    dy_col = Column(y_peak, name="y_peak")
-    return dx_col, dy_col
-
-
 def get_catsim_galaxy(entry, filt, survey, no_disk=False, no_bulge=False, no_agn=False):
     """Returns a bulge/disk/agn Galsim galaxy profile based on entry.
 
@@ -361,10 +339,6 @@ class DrawBlendsGenerator(ABC):
             # All bands in same survey have same pixel scale, WCS
             pixel_scale = survey.pixel_scale.to_value("arcsec")
             pix_stamp_size = int(self.stamp_size / pixel_scale)
-
-            x_peak, y_peak = get_center_in_pixels(blend, wcs)
-            blend.add_column(x_peak)
-            blend.add_column(y_peak)
 
             n_bands = len(survey.available_filters)
             iso_image_multi = np.zeros((self.max_number, n_bands, pix_stamp_size, pix_stamp_size))
